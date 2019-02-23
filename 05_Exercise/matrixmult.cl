@@ -1,0 +1,5 @@
+///////////////////////////////////////////////////////////////////////////////
+__kernel void matrixmult(const __global int *a, const __global int *b, __global int *c) {
+	// TODO
+}
+
