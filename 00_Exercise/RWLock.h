@@ -12,23 +12,41 @@ class RWLock {
 
 public:
 	size_t getReaders() const {
-		// TODO
-		return 0;
+		return m_readLocked;
 	}
 
 	void lockR() {
-		// TODO
+		unique_lock<mutex> monitor(m_mutex);
+		while (m_writeLocked) {
+			m_readingAllowed.wait(monitor);
+		}
+		m_readLocked++;
 	}
 
 	void unlockR() {
-		// TODO
+		unique_lock<mutex> monitor(m_mutex);
+		if (m_readLocked > 0) {
+			m_readLocked--;
+			if (m_readLocked == 0) {
+				m_writingAllowed.notify_one();
+			}
+		}
 	}
 
 	void lockW() {
-		// TODO
+		unique_lock<mutex> monitor(m_mutex);
+		while (m_readLocked > 0 || m_writeLocked) {
+			m_writingAllowed.wait(monitor);
+		}
+		m_writeLocked = true;
 	}
 
 	void unlockW() {
-		// TODO
+		unique_lock<mutex> monitor(m_mutex);
+		if (m_writeLocked) {
+			m_writeLocked = false;
+			m_readingAllowed.notify_all();
+			m_writingAllowed.notify_one();
+		}
 	}
 };
