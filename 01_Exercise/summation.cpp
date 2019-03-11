@@ -1,6 +1,7 @@
 #include <iostream>
 #include <omp.h>
 #include "Stopwatch.h"
+#include <ppl.h>
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,29 +23,73 @@ long long sumSerial(const int n) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Parallel summation with critical section
 static long long sumPar1(const int n) {
-	// TODO
-	return 0;
+	long long sum = 0;
+	#pragma omp parallel for default(none) shared(sum)
+	for (int i = 1; i <= n; i++) {
+		#pragma omp critical
+		sum += i;
+	}
+	return sum;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Parallel summation with atomic access
 static long long sumPar2(const int n) {
-	// TODO
-	return 0;
+	long long sum = 0;
+	#pragma omp parallel for default(none) shared(sum)
+	for (int i = 1; i <= n; i++) {
+		#pragma omp atomic
+		sum += i;
+	}
+	return sum;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Parallel summation with reduction
 static long long sumPar3(const int n) {
-	// TODO
-	return 0;
+	long long sum = 0;
+	#pragma omp parallel for default(none) reduction(+:sum)
+	for (int i = 1; i <= n; i++) {
+		sum += i;
+	}
+	return sum;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Parallel summation with explicit locks
 static long long sumPar4(const int n) {
-	// TODO
-	return 0;
+	omp_lock_t myLock;
+	long long sum = 0;
+	omp_init_lock(&myLock);
+	#pragma omp parallel for default(none) shared(sum, myLock)
+	for (int i = 1; i <= n; i++) {
+		omp_set_lock(&myLock);
+		sum += i;
+		omp_unset_lock(&myLock);
+	}
+	omp_destroy_lock(&myLock);
+	return sum;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Parallel summation using VS concurrency runtime and atomic_int64_t
+static long long sumPar5(const int n) {
+	atomic_int64_t sum = 0;
+	concurrency::parallel_for(1, n + 1, [&sum](int i) {
+		sum += i;
+	});
+	return sum;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Parallel summation using VS concurrency runtime and reduction
+static long long sumPar6(const int n) {
+	int64_t* array = new int64_t[n];
+	for (int i = 1, j = 0; i <= n; i++, j++) array[j] = i;
+
+	int64_t sum = concurrency::parallel_reduce(array, array + n, 0);
+	delete[] array;
+	return sum;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,5 +134,17 @@ void summation() {
 	sw.Stop();
 	cout << "Explicit locks: " << sum4 << " in " << sw.GetElapsedTimeMilliseconds() << " ms" << endl;
 	cout << boolalpha << "The two operations produce the same results: " << (sum4 == sum0) << endl << endl;
+
+	sw.Start();
+	int64_t sum5 = sumPar5(N);
+	sw.Stop();
+	cout << "Concurrency Runtime Atomic access: " << sum5 << " in " << sw.GetElapsedTimeMilliseconds() << " ms" << endl;
+	cout << boolalpha << "The two operations produce the same results: " << (sum5 == sum0) << endl << endl;
+
+	sw.Start();
+	int64_t sum6 = sumPar6(N);
+	sw.Stop();
+	cout << "Concurrency Runtime Reduction: " << sum6 << " in " << sw.GetElapsedTimeMilliseconds() << " ms" << endl;
+	cout << boolalpha << "The two operations produce the same results: " << (sum6 == sum0) << endl << endl;
 
 }
