@@ -231,7 +231,7 @@ int main(int argc, const char* argv[]) {
 	cout << parTime << " ms" << endl << endl;
 	
 	// process image on GPU with OpenCL and produce out2
-	OCLData ocl = initOCL("../Exercise2/edges.cl", "edges");
+	OCLData ocl = initOCL("edges.cl", "edges");
 	cout << endl << "Start OpenCL on GPU" << endl;
 	sw.Start();
 	processOCL(ocl, image, out2, hFilter, vFilter, fSize);
@@ -242,22 +242,22 @@ int main(int argc, const char* argv[]) {
 	cout << boolalpha << "OpenMP and OpenCL on GPU produce the same results: " << equals(out1, out2, fSize) << endl << endl;
 
 	// process image on GPU with AMP and produce out3
-	cout << "Start AMP on GPU" << endl;
-	sw.Start();
-	processAMP(image, out3, hFilter, vFilter, fSize, sw);
-	sw.Stop();
-	cout << sw.GetElapsedTimeMilliseconds() << " ms, speedup = " << parTime/sw.GetElapsedTimeMilliseconds() << endl ;
+	//cout << "Start AMP on GPU" << endl;
+	//sw.Start();
+	//processAMP(image, out3, hFilter, vFilter, fSize, sw);
+	//sw.Stop();
+	//cout << sw.GetElapsedTimeMilliseconds() << " ms, speedup = " << parTime/sw.GetElapsedTimeMilliseconds() << endl ;
 
 #ifdef FAST_MATH
 	// compare out2 with out3
-	cout << boolalpha << "OpenCL on GPU and AMP produce the same results: " << equals(out2, out3, fSize) << endl << endl; // should return true if AMP uses fast_math::sqrtf
+	//cout << boolalpha << "OpenCL on GPU and AMP produce the same results: " << equals(out2, out3, fSize) << endl << endl; // should return true if AMP uses fast_math::sqrtf
 #else
 	// compare out1 with out3
-	cout << boolalpha << "OpenMP and AMP produce the same results: " << equals(out1, out3, fSize) << endl << endl; // should return true if AMP uses precise_math::sqrtf
+	//cout << boolalpha << "OpenMP and AMP produce the same results: " << equals(out1, out3, fSize) << endl << endl; // should return true if AMP uses precise_math::sqrtf
 #endif
 	
 	// save output image
-	if (!out3.save(argv[3])) {
+	if (!out1.save(argv[3])) {
 		cerr << "Image not saved: " << argv[3] << endl;
 		return -1;
 	}
