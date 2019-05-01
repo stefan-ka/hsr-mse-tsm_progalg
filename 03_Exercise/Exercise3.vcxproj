@@ -53,7 +53,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-	<Import Project="$(INTELOCLSDKROOT)\BuildCustomizations\IntelOpenCL.props" />
+    <Import Project="$(INTELOCLSDKROOT)\BuildCustomizations\IntelOpenCL.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
     <Import Project="..\Stopwatch\Stopwatch.vcxitems" Label="Shared" />
@@ -103,7 +103,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\program files (x86)\microsoft visual studio\2017\community\common7\ide\extensions\4hhyuhoo.ghy\SDK\Native\inc;%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -125,7 +125,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\program files (x86)\microsoft visual studio\2017\community\common7\ide\extensions\4hhyuhoo.ghy\SDK\Native\inc;%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -149,7 +149,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\program files (x86)\microsoft visual studio\2017\community\common7\ide\extensions\4hhyuhoo.ghy\SDK\Native\inc;%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
@@ -177,7 +177,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\program files (x86)\microsoft visual studio\2017\community\common7\ide\extensions\4hhyuhoo.ghy\SDK\Native\inc;%(AdditionalIncludeDirectories);$(CUDA_INC_PATH);$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
       <BrowseInformation>true</BrowseInformation>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
@@ -210,6 +210,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-	  <Import Project="$(INTELOCLSDKROOT)\BuildCustomizations\IntelOpenCL.targets" />
+    <Import Project="$(INTELOCLSDKROOT)\BuildCustomizations\IntelOpenCL.targets" />
   </ImportGroup>
 </Project>

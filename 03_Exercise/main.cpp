@@ -230,7 +230,7 @@ int main(int argc, const char* argv[]) {
 	cout << parTime << " ms" << endl << endl;
 	
 	// process image on GPU with OpenCL and produce out2
-	OCLData ocl = initOCL("../Exercise2/edges.cl", "edges");
+	OCLData ocl = initOCL("edges.cl", "edges");
 	cout << endl << "Start OpenCL on GPU" << endl;
 	sw.Start();
 	processOCL(ocl, image, out2, hFilter, vFilter, fSize);
