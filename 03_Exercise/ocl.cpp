@@ -6,7 +6,7 @@
 #include "ocl.h"
 
 ////////////////////////////////////////////////////////////////////////
-OCLData initOCL(const char* kernelFileName, const char* kernelName) {
+OCLData initOCL(const char* kernelFileName, const char* kernelName, const bool useCPU) {
 	OCLData ocl;
 	vector<cl::Platform> platforms;
 	vector<cl::Device> devices;
@@ -30,8 +30,13 @@ OCLData initOCL(const char* kernelFileName, const char* kernelName) {
 			vector<cl::Device> devs;
 
 			try {
-				// get GPUs of this platform
-				p.getDevices(CL_DEVICE_TYPE_GPU, &devs);
+				if (useCPU) {
+					// get CPUs of this platform
+					p.getDevices(CL_DEVICE_TYPE_CPU, &devs);
+				} else {
+					// get GPUs of this platform
+					p.getDevices(CL_DEVICE_TYPE_GPU, &devs);
+				}
 
 			} catch(cl::Error&) {
 				// there is no GPU on this platform

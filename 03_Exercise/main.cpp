@@ -4,7 +4,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 // prototypes
-OCLData initOCL(const char* kernelFileName, const char* kernelName);
+OCLData initOCL(const char* kernelFileName, const char* kernelName, const bool useCPU);
 void processOCL(OCLData& ocl, const fipImage& input, fipImage& output, const int *hFilter, const int *vFilter, int fSize);
 
 ////////////////////////////////////////////////////////////////////////
@@ -230,7 +230,7 @@ int main(int argc, const char* argv[]) {
 	cout << parTime << " ms" << endl << endl;
 	
 	// process image on GPU with OpenCL and produce out2
-	OCLData ocl = initOCL("edges.cl", "edges");
+	OCLData ocl = initOCL("edges.cl", "edges", false);
 	cout << endl << "Start OpenCL on GPU" << endl;
 	sw.Start();
 	processOCL(ocl, image, out2, hFilter, vFilter, fSize);
@@ -240,13 +240,18 @@ int main(int argc, const char* argv[]) {
 	// compare out1 with out2
 	cout << boolalpha << "OpenMP and OpenCL on GPU produce the same results: " << equals(out1, out2, fSize) << endl << endl;
 
-	// TODO process image on CPU with OpenCL and produce out3
+	OCLData oclCPU = initOCL("edges.cl", "edges", true);
+	cout << endl << "Start OpenCL on CPU" << endl;
+	sw.Start();
+	processOCL(oclCPU, image, out3, hFilter, vFilter, fSize);
+	sw.Stop();
+	cout << sw.GetElapsedTimeMilliseconds() << " ms, speedup = " << parTime / sw.GetElapsedTimeMilliseconds() << endl;
 
-	// compare out1 with out2
-	cout << boolalpha << "OpenMP and OpenCL on GPU produce the same results: " << equals(out1, out3, fSize) << endl << endl;
+	// compare out1 with out3
+	cout << boolalpha << "OpenMP and OpenCL on CPU produce the same results: " << equals(out1, out3, fSize) << endl << endl;
 
 	// save output image
-	if (!out2.save(argv[3])) {
+	if (!out3.save(argv[3])) {
 		cerr << "Image not saved: " << argv[3] << endl;
 		return -1;
 	}
