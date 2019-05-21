@@ -38,6 +38,7 @@ void oddEvenSort() {
 
 	int nproc, myid, oddid, evenid;
 	MPI_Status status;
+	double sequentialTime = 0;
 
 	MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -49,17 +50,32 @@ void oddEvenSort() {
 	int *received = new int[nlocal];
 	int *temp = new int[nlocal];
 
-	// fill in elements with random numbers
-	srand(myid);
-	for (int i = 0; i < nlocal; i++) {
-		elements[i] = rand();
+	// fill in elements with random numbers on process 0
+	if (myid == 0) {
+		elements = new int[n];
+		for (int i = 0; i < n; i++) {
+			elements[i] = rand();
+		}
+
+		// measure sequential time
+		int *copy = new int[n];
+		memcpy(copy, elements, n*sizeof(int));
+		double start = MPI_Wtime();
+		sort(copy, copy + n);
+		sequentialTime = MPI_Wtime() - start;
+		delete[] copy;
+	} else {
+		elements = new int[nlocal];
 	}
+	
+	// distribute elements with scatter
+	MPI_Scatter(elements, nlocal, MPI_INT, received, nlocal, MPI_INT, 0, MPI_COMM_WORLD);
 
 	// start time measuring
-	// TODO
+	double startTime = MPI_Wtime();
 
 	// sort local elements
-	sort(elements, elements + nlocal);
+	sort(received, received + nlocal);
 
 	// determine the id of the processors that myid needs to communicate during the odd and even phases
 	if (myid & 1) {
@@ -76,49 +92,45 @@ void oddEvenSort() {
 	for (int i = 0; i < nproc; i++) {
 		if (i & 1) {
 			// odd phase
-			MPI_Sendrecv(elements, nlocal, MPI_INT, oddid, 1, received, nlocal, MPI_INT, oddid, 1, MPI_COMM_WORLD, &status);
+			MPI_Sendrecv(received, nlocal, MPI_INT, oddid, 1, elements, nlocal, MPI_INT, oddid, 1, MPI_COMM_WORLD, &status);
 		} else {
 			// even phase
-			MPI_Sendrecv(elements, nlocal, MPI_INT, evenid, 1, received, nlocal, MPI_INT, evenid, 1, MPI_COMM_WORLD, &status);
+			MPI_Sendrecv(received, nlocal, MPI_INT, evenid, 1, elements, nlocal, MPI_INT, evenid, 1, MPI_COMM_WORLD, &status);
 		}
 		if (status.MPI_SOURCE != MPI_PROC_NULL) {
 			// sent data in received buffer
 			// received data in elements buffer
 			CompareSplit(nlocal, received, elements, temp, myid < status.MPI_SOURCE);
-			// temp contains result of compare-split operation: copy temp back to elements buffer
-			memcpy(elements, temp, nlocal*sizeof(int));
+			// temp contains result of compare-split operation: copy temp back to received buffer
+			memcpy(received, temp, nlocal*sizeof(int));
 		}
 	}
 
 	// stop time measuring
-	// TODO
-
-	// check if local elements are sorted in ascending order
-	int i = 1;
-	while (i < nlocal && elements[i-1] <= elements[i]) i++;
-	temp[0] = elements[0]; temp[1] = elements[nlocal - 1]; temp[2] = (i == nlocal);
-
-	// check if all elements are sorted in ascending order
+	double localWallClockTime = MPI_Wtime() - startTime;
+	
+	double globalWallClockTime;
+	MPI_Reduce(&localWallClockTime, &globalWallClockTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 	if (myid == 0) {
-		bool isSorted = true;
-		int last = elements[nlocal - 1];
+		cout << "Largest wall-clock time is " << globalWallClockTime << endl;
+		cout << "Sequential wall-clock time is " << sequentialTime << endl;
+	}
 
-		// receive results in ascending order
-		cout << "Receive data blocks of " << nproc << " processes." << endl;
-		for (int i = 1; i < nproc; i++) {
-			MPI_Recv(temp, 3, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			if (temp[0] < last || !temp[2]) {
-				isSorted = false;
-			}
-			last = temp[1];
+	// all sorted data to process 0
+	MPI_Gather(received, nlocal, MPI_INT, elements, nlocal, MPI_INT, 0, MPI_COMM_WORLD);
+
+	// check if elements are sorted on process 0
+	if (myid == 0) {
+		bool sorted = true;
+		for (int i = 1; i < n; i++) {
+			if (elements[i - 1] > elements[i])
+				sorted = false;
 		}
-		if (isSorted) {
+		if (sorted) {
 			cout << n << " elements have been sorted in ascending order" << endl;
 		} else {
 			cout << "elements are not correctly sorted" << endl;
 		}
-	} else {
-		MPI_Send(temp, 3, MPI_INT, 0, 0, MPI_COMM_WORLD);
 	}
 
 	delete[] elements;
