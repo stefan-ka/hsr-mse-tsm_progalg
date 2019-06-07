@@ -56,7 +56,7 @@ int main() {
 		swGPU.Restart();
 		matMultGPU(ocl, a, b, c1, n);
 		swGPU.Stop();
-		if (different(c0, c1, n2) && !wrongGPUresults) wrongGPUresults = 0;
+		if (different(c0, c1, n2) && !wrongGPUresults) wrongGPUresults = n;
 
 		// clean-up
 		delete[] a;

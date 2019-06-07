@@ -107,6 +107,19 @@ OCLData initOCL(const char* kernelFileName, const char* kernelName) {
 
 ////////////////////////////////////////////////////////////////////////
 void matMultGPU(OCLData& ocl, const int* a, const int* b, int* const c, const int n) {
-	// TODO
-	// do data exchange between CPU and GPU and start the GPU kernel 
+	size_t n2 = sizeof(int) * n * n;
+	cl::Buffer bufferA(ocl.m_context, CL_MEM_READ_ONLY, n2);
+	cl::Buffer bufferB(ocl.m_context, CL_MEM_READ_ONLY, n2);
+	cl::Buffer bufferC(ocl.m_context, CL_MEM_WRITE_ONLY, n2);
+
+	ocl.m_queue.enqueueWriteBuffer(bufferA, CL_TRUE, 0, n2, a);
+	ocl.m_queue.enqueueWriteBuffer(bufferB, CL_TRUE, 0, n2, b);
+
+	ocl.m_kernel.setArg(0, bufferA);
+	ocl.m_kernel.setArg(1, bufferB);
+	ocl.m_kernel.setArg(2, bufferC);
+	
+	ocl.m_queue.enqueueNDRangeKernel(ocl.m_kernel, cl::NullRange, cl::NDRange(n, n), cl::NullRange);
+
+	ocl.m_queue.enqueueReadBuffer(bufferC, CL_TRUE, 0, n2, c);
 }
