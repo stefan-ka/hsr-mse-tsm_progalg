@@ -17,8 +17,8 @@ void parallelQuicksort(float a[], int left, int right, int p);
 ////////////////////////////////////////////////////////////////////////////////////////
 // comperator used in qsort
 int compareTo(const void *a1, const void *a2) {
-	double *s1 = (double *)a1;
-	double *s2 = (double *)a2;
+	float *s1 = (float *)a1;
+	float *s2 = (float *)a2;
 	
 	if (*s1 < *s2) {
 		return -1;
@@ -87,13 +87,21 @@ static void tests(int n, int p) {
 	cout << "Nested Threads: " << boolalpha << (omp_get_nested()) << endl << endl;
 
 	// output small arrays
-	if (n <= 20) print(data, n);
+	if (n <= 20) {
+		cout << "data: ";
+		print(data, n);
+	}
 
 	// standard sequential qsort
 	sw.Start();
 	qsort(sortRef, n, sizeof(float), compareTo);
 	sw.Stop();
 	cout << "qsort (n = " << n << ") in " << sw.GetElapsedTimeMilliseconds() << " ms" << endl << endl;
+	
+	if (n <= 20) {
+		cout << "sortRef: ";
+		print(sortRef, n);
+	}
 
 	// stl sort
 	memcpy(sort, data, dataSize);
