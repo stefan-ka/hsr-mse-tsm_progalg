@@ -60,17 +60,17 @@ static void oddEvenSort(const int nProcs, const int nlocal, const int myID, floa
 
 		if (i & 1) {
 			// odd phase
-			MPI_Sendrecv(elements, nlocal, MPI_FLOAT, oddid, 1, received, nlocal, MPI_FLOAT, oddid, 1, MPI_COMM_WORLD, &status);
+			MPI_Sendrecv(received, nlocal, MPI_FLOAT, oddid, 1, elements, nlocal, MPI_FLOAT, oddid, 1, MPI_COMM_WORLD, &status);
 		} else {
 			// even phase
-			MPI_Sendrecv(elements, nlocal, MPI_FLOAT, evenid, 1, received, nlocal, MPI_FLOAT, evenid, 1, MPI_COMM_WORLD, &status);
+			MPI_Sendrecv(received, nlocal, MPI_FLOAT, evenid, 1, elements, nlocal, MPI_FLOAT, evenid, 1, MPI_COMM_WORLD, &status);
 		}
 		if (status.MPI_SOURCE != MPI_PROC_NULL) {
 			// sent data in elements buffer
 			// received data in received buffer
-			compareSplit(nlocal, elements, received, temp, myID < status.MPI_SOURCE, lChanged);
+			compareSplit(nlocal, received, elements, temp, myID < status.MPI_SOURCE, lChanged);
 			// temp contains result of compare-split operation: copy temp back to elements buffer
-			memcpy(elements, temp, nlocal*sizeof(float));
+			memcpy(received, temp, nlocal*sizeof(float));
 		}
 
 		// reduce changed value: all processes have the same information in changed
@@ -83,8 +83,41 @@ static void oddEvenSort(const int nProcs, const int nlocal, const int myID, floa
 // nProcs: number of processes
 // nlocal: number of elements to be sorted
 // elements: data to be sorted
-void shellSort(const int nProcs, const int nlocal, const int myID, float *elements) {
-	// TODO
+void shellSort(const int nProcs, const int nlocal, const int myID, float *elements, float *received) {
+	MPI_Status status;
+	float *temp = new float[nlocal];
+	
+	// first step: sort my local elements
+	sort(received, received + nlocal);
+
+	int p = nProcs - 1;
+	int p2 = 1;
+	// p2 must be power of two: p2 = 2^k >= nProcs
+	while (p) {
+		p2 <<= 1;
+		p >>= 1;
+	}
+	
+	// phase 1: log(p) times (p2) compare-split over far distances
+	int groupSize = p2;
+	while (groupSize > 1) {
+		div_t divMyIdByGroupSize = div(myID, groupSize);
+		int partnerId = (divMyIdByGroupSize.quot + 1) * groupSize - 1 - divMyIdByGroupSize.rem;
+		if (partnerId >= nProcs || partnerId < 0)
+			partnerId = MPI_PROC_NULL;
+
+		// compare-split
+		MPI_Sendrecv(received, nlocal, MPI_INT, partnerId, 1, elements, nlocal, MPI_INT, partnerId, 1, MPI_COMM_WORLD, &status);
+		if (partnerId != MPI_PROC_NULL) {
+			bool lChanged = false;
+			compareSplit(nlocal, received, elements, temp, divMyIdByGroupSize.rem < groupSize / 2, lChanged);
+			memcpy(received, temp, nlocal * sizeof(float));
+		}
+		groupSize >>= 1;
+	}
+
+	// phase 2: odd even sort
+	oddEvenSort(nProcs, nlocal, myID, elements, received, temp);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +164,7 @@ void shellsort() {
 		// use a barrier to synchronize start time
 		MPI_Barrier(MPI_COMM_WORLD);
 		double start = MPI_Wtime();
-		shellSort(nProcs, nlocal, myID, received);
+		shellSort(nProcs, nlocal, myID, elements, received);
 
 		// stop time
 		double localElapsed = MPI_Wtime() - start, elapsed;
